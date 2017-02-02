@@ -38,8 +38,8 @@ instance Monad Parser where
                     Success(x, xs) -> ff xs where Parser ff = f x
         )
 
-return :: a -> Parser a
-return x = Parser (\stream -> Success(x, stream))
+--return :: a -> Parser a
+--return x = Parser (\stream -> Success(x, stream))
 
 bind :: Parser a -> (a -> Parser b) -> Parser b
 bind (Parser p1) f =
@@ -94,3 +94,18 @@ manyCombinator (Parser p) =
 -- |Parses integers
 integerParser :: Parser Integer
 integerParser = applyCombinator (manyCombinator digitParser) (read :: String -> Integer)    -- can I put some error handling in here?
+
+-- |Parses strings
+stringParser :: String -> Parser String
+stringParser s =
+    let pr :: Parser String -> Char -> Parser String
+        pr (Parser p) c =
+             Parser (\stream ->
+                case p stream of
+                    Failure         -> Failure
+                    Success (s, xs) -> q xs
+                                       where q (y : ys) | y == c    = Success(s ++ [c], ys)
+                                                        | otherwise = Failure
+                                             q [] = Failure
+             )
+    in foldl pr (return "") s
