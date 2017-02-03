@@ -91,6 +91,16 @@ manyCombinator (Parser p) =
                               where (Parser pp) = applyCombinator (manyCombinator (Parser p)) (\ys -> x : ys)
     )
 
+-- |Applies the parser at least once, and as many times as possible thereafter
+someCombinator :: Parser a -> Parser ([a])
+someCombinator (Parser p) =
+    Parser( \stream ->
+        case p stream of
+            Failure        -> Failure
+            Success(x, xs) -> pp xs
+                              where (Parser pp) = applyCombinator (manyCombinator (Parser p)) (\ys -> x : ys)
+    )
+
 -- |Parses integers
 integerParser :: Parser Integer
 integerParser = applyCombinator (manyCombinator digitParser) (read :: String -> Integer)    -- can I put some error handling in here?
@@ -109,3 +119,44 @@ stringParser s =
                                              q [] = Failure
              )
     in foldl pr (return "") s
+
+-- Below here are specialized parsers for implementing our toy language
+
+data Boolean = True | False deriving Show
+data Term = BooleanTerm(Boolean) | IfTerm(Term, Term, Term)
+
+trueParser :: Parser Boolean
+trueParser =
+    fmap (\_ -> Main.True) (stringParser "true")
+    
+falseParser :: Parser Boolean
+falseParser =
+    fmap (\_ -> Main.False) (stringParser "false")
+    
+boolParser :: Parser Boolean
+boolParser =
+    eitherCombinator trueParser falseParser
+
+whitespaceParser :: Parser ()
+whitespaceParser =
+    fmap (\_ -> ()) $ someCombinator $ eitherCombinator (charParser '\t') (charParser ' ')
+
+ifParser :: Parser (Boolean, Boolean, Boolean)
+ifParser =
+    let ifClause =
+            stringParser "if"
+            *> whitespaceParser
+            *> boolParser
+            <* whitespaceParser
+        thenClause =
+            stringParser "then"
+            *> whitespaceParser
+            *> boolParser
+            <* whitespaceParser
+        elseClause =
+            stringParser "else"
+            *> whitespaceParser
+            *> boolParser
+    in fmap (\ifClause -> (\thenClause -> (\elseClause -> (ifClause, thenClause, elseClause)))) ifClause
+        <*> thenClause
+        <*> elseClause
