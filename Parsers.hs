@@ -41,6 +41,9 @@ instance Monad Parser where
 --return :: a -> Parser a
 --return x = Parser (\stream -> Success(x, stream))
 
+parse :: Parser a -> String -> ParserResult a
+parse (Parser f) s = f s
+
 bind :: Parser a -> (a -> Parser b) -> Parser b
 bind (Parser p1) f =
     Parser (\stream ->
@@ -123,7 +126,7 @@ stringParser s =
 -- Below here are specialized parsers for implementing our toy language
 
 data Boolean = True | False deriving Show
-data Term = BooleanTerm(Boolean) | IfTerm(Term, Term, Term)
+data Term = BooleanTerm Boolean | IfTerm Term Term Term deriving Show
 
 trueParser :: Parser Boolean
 trueParser =
@@ -133,30 +136,40 @@ falseParser :: Parser Boolean
 falseParser =
     fmap (\_ -> Main.False) (stringParser "false")
     
-boolParser :: Parser Boolean
+boolParser :: Parser Term
 boolParser =
-    eitherCombinator trueParser falseParser
+    eitherCombinator (fmap BooleanTerm trueParser) (fmap BooleanTerm falseParser)
 
 whitespaceParser :: Parser ()
 whitespaceParser =
     fmap (\_ -> ()) $ someCombinator $ eitherCombinator (charParser '\t') (charParser ' ')
 
-ifParser :: Parser (Boolean, Boolean, Boolean)
+ifParser :: Parser Term
 ifParser =
+    -- Note: The funny little Parser (\stream -> parse termParser stream) construct below
+    --       seems to be necessary to avoid an infinite loop.
+    --       I think the loop happens on construction when it tries to evaluate that the
+    --       termParser actually is, before the stream starts being passed through it.
+    --       To be honest, I don't fully understand it, but this belayed evaluation seems
+    --       to solve the problem.
     let ifClause =
             stringParser "if"
             *> whitespaceParser
-            *> boolParser
+            *> Parser (\stream -> parse termParser stream)
             <* whitespaceParser
         thenClause =
             stringParser "then"
             *> whitespaceParser
-            *> boolParser
+            *> Parser (\stream -> parse termParser stream)
             <* whitespaceParser
         elseClause =
             stringParser "else"
             *> whitespaceParser
-            *> boolParser
-    in fmap (\ifClause -> (\thenClause -> (\elseClause -> (ifClause, thenClause, elseClause)))) ifClause
+            *> Parser (\stream -> parse termParser stream)
+    in fmap (\ifClause -> (\thenClause -> (\elseClause -> IfTerm ifClause thenClause elseClause))) ifClause
         <*> thenClause
         <*> elseClause
+
+termParser :: Parser Term
+termParser =
+    eitherCombinator boolParser ifParser 
