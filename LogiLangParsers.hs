@@ -45,6 +45,20 @@ ifParser =
         <*> thenClause
         <*> elseClause
 
+bracketedTermParser :: Parser Term
+bracketedTermParser =
+    charParser '('
+    *> Parser (\stream -> parse termParser stream)
+    <* whitespaceParser
+    <* charParser ')'
+
+leadingPaddedTermParser :: Parser Term
+leadingPaddedTermParser =
+    (someCombinator whitespaceParser)
+    *> Parser (\stream -> parse termParser stream)
+
 termParser :: Parser Term
 termParser =
-    eitherCombinator boolParser ifParser 
+    eitherCombinator boolParser
+        (eitherCombinator ifParser
+            (eitherCombinator bracketedTermParser leadingPaddedTermParser))
