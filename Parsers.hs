@@ -73,6 +73,12 @@ eitherCombinator (Parser p1) (Parser p2) =
             res     -> res
     )
 
+-- |Use the result of the first parser in the list that succeeds
+anyCombinator :: [Parser a] -> Parser a
+anyCombinator []     = Parser (\stream -> Failure)
+anyCombinator [p]    = p
+anyCombinator (p:ps) = eitherCombinator p (anyCombinator ps)
+
 -- |Succeeds if the stream begins with one of the decimal digits
 digitParser :: Parser Char
 digitParser = foldl1 eitherCombinator $ map charParser ['0'..'9']

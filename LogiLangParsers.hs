@@ -45,11 +45,19 @@ ifParser =
         <*> thenClause
         <*> elseClause
 
+andParser :: Parser Term
+andParser =
+    fmap (\firstClause -> AndTerm firstClause) (Parser (\stream -> parse termParser stream))
+    <* whitespaceParser
+    <* stringParser "and"
+    <* whitespaceParser
+    <*> Parser (\stream -> parse termParser stream)
+
 bracketedTermParser :: Parser Term
 bracketedTermParser =
     charParser '('
     *> Parser (\stream -> parse termParser stream)
-    <* whitespaceParser
+    <* manyCombinator whitespaceParser
     <* charParser ')'
 
 leadingPaddedTermParser :: Parser Term
@@ -59,6 +67,8 @@ leadingPaddedTermParser =
 
 termParser :: Parser Term
 termParser =
-    eitherCombinator boolParser
-        (eitherCombinator ifParser
-            (eitherCombinator bracketedTermParser leadingPaddedTermParser))
+    anyCombinator [andParser,
+                   boolParser,
+                   ifParser,
+                   bracketedTermParser,
+                   leadingPaddedTermParser]
