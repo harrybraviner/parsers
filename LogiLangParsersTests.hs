@@ -80,4 +80,25 @@ andParserTests = TestList [TestLabel "andParser tt test" andParserTest1,
                            TestLabel "andParser (if)f test" andParserTest3,
                            TestLabel "andParser (if)(and) test" andParserTest4]
 
-tests = TestList [boolParserTests, ifParserTests, andParserTests]
+zeroParserTest = TestCase (assertEqual ""
+                            (Success Zero "")
+                            (parse termParser "0"))
+
+succZeroParserTest = TestCase (assertEqual ""
+                            (Success (Succ Zero) "")
+                            (parse termParser "succ 0"))
+
+succPredZeroParserTest = TestCase (assertEqual ""
+                            (Success (Succ (Pred Zero)) "")
+                            (parse termParser "succ pred 0"))
+
+isZeroParserTest = TestCase (assertEqual ""
+                                (Success (IsZero (Succ (Pred (Succ (Succ Zero))))) "")
+                                (parse termParser "iszero succ pred succ succ 0"))
+
+numericParserTests = TestList [TestLabel "zero" zeroParserTest,
+                               TestLabel "succ zero" succZeroParserTest,
+                               TestLabel "succ pred zero" succPredZeroParserTest,
+                               TestLabel "iszero succ pred succ succ 0" isZeroParserTest]
+
+tests = TestList [boolParserTests, ifParserTests, andParserTests, numericParserTests]

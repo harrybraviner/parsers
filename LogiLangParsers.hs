@@ -45,6 +45,25 @@ ifParser =
         <*> thenClause
         <*> elseClause
 
+zeroParser :: Parser Term
+zeroParser =
+    fmap (\_ -> Zero) (stringParser "0")
+
+succParser :: Parser Term
+succParser =
+    fmap (\_ -> (\x -> Succ x)) (stringParser "succ")
+    <*> Parser (\stream -> parse termParser stream)
+
+predParser :: Parser Term
+predParser =
+    fmap (\_ -> (\x -> Pred x)) (stringParser "pred")
+    <*> Parser (\stream -> parse termParser stream)
+
+isZeroParser :: Parser Term
+isZeroParser =
+    fmap (\_ -> (\x -> IsZero x)) (stringParser "iszero")
+    <*> Parser (\stream -> parse termParser stream)
+
 andParser :: Parser Term
 andParser =
     fmap (\firstClause -> AndTerm firstClause) (Parser (\stream -> parse nonAndParser stream))
@@ -69,6 +88,10 @@ nonAndParser :: Parser Term
 nonAndParser =
     anyCombinator [boolParser,
                    ifParser,
+                   zeroParser,
+                   succParser,
+                   predParser,
+                   isZeroParser,
                    bracketedTermParser,
                    leadingPaddedTermParser]
 
@@ -77,5 +100,9 @@ termParser =
     anyCombinator [andParser,
                    boolParser,
                    ifParser,
+                   zeroParser,
+                   succParser,
+                   predParser,
+                   isZeroParser,
                    bracketedTermParser,
                    leadingPaddedTermParser]

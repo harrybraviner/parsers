@@ -11,3 +11,5 @@ To just use to parser, do something like `parse termParser "(if true then false 
 To see a reduction, try `fmap reduce $ parse termParser "(if true then false else true) and false"`.
 
 Full reduction: `fmap fullReduce $ parse termParser "(if true then false else true) and false"`.
+
+Another full reduction: `fmap fullyReduce $ parse termParser "if (iszero succ 0) then true else 0"`.
