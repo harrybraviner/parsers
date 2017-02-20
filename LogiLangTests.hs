@@ -93,4 +93,42 @@ fullyReduceTests = TestList [TestLabel "IfTerm reduction"         fullyReduceTes
                              TestLabel "IfTerm double reduction"  fullyReduceTest3,
                              TestLabel "AndTerm double reduction" fullyReduceTest4]
 
-tests = TestList [valueTests, reductionTests, fullyReduceTests]
+isZeroTest1 = TestCase (assertEqual ""
+                            (BooleanTerm LogiLang.True)
+                            (reduce (IsZero Zero)))
+
+isZeroTest2 = TestCase (assertEqual ""
+                            (BooleanTerm LogiLang.False)
+                            (reduce (IsZero (Succ Zero))))
+
+isZeroTest3 = TestCase (assertEqual ""
+                            (BooleanTerm LogiLang.False)
+                            (reduce (IsZero (Succ (Pred Zero)))))
+
+isZeroTests = TestList [TestLabel "isZero Zero" isZeroTest1,
+                        TestLabel "isZero 1"    isZeroTest2,
+                        TestLabel "isZero succ pred zero" isZeroTest3]
+
+predTest1 = TestCase (assertEqual ""
+                        Zero
+                        (reduce (Pred Zero)))
+
+predTest2 = TestCase (assertEqual ""
+                        (Succ Zero)
+                        (reduce (Pred (Succ (Succ Zero)))))
+
+predTests = TestList [TestLabel "Pred Zero" predTest1,
+                      TestLabel "Pred Succ Zero" predTest2]
+
+succTest1 = TestCase (assertEqual ""
+                        (Succ Zero)
+                        (reduce (Succ (Pred Zero))))
+
+succTest2 = TestCase (assertEqual ""
+                        (Succ Zero)
+                        (reduce (Succ (Pred (Succ Zero)))))
+
+succTests = TestList [TestLabel "Succ Pred Zero" succTest1,
+                      TestLabel "Succ Pred Succ Zero" succTest2]
+
+tests = TestList [valueTests, reductionTests, fullyReduceTests, isZeroTests, predTests, succTests]
