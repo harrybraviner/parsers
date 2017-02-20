@@ -102,7 +102,7 @@ isZeroTest2 = TestCase (assertEqual ""
                             (reduce (IsZero (Succ Zero))))
 
 isZeroTest3 = TestCase (assertEqual ""
-                            (BooleanTerm LogiLang.False)
+                            (IsZero (Succ Zero))
                             (reduce (IsZero (Succ (Pred Zero)))))
 
 isZeroTests = TestList [TestLabel "isZero Zero" isZeroTest1,
@@ -131,4 +131,31 @@ succTest2 = TestCase (assertEqual ""
 succTests = TestList [TestLabel "Succ Pred Zero" succTest1,
                       TestLabel "Succ Pred Succ Zero" succTest2]
 
-tests = TestList [valueTests, reductionTests, fullyReduceTests, isZeroTests, predTests, succTests]
+wrongTest1 = TestCase (assertEqual ""
+                        Wrong
+                        (reduce (IfTerm Zero (BooleanTerm LogiLang.True) (BooleanTerm LogiLang.False))))
+
+wrongTest2 = TestCase (assertEqual ""
+                        Wrong
+                        (reduce (IfTerm (Succ Zero) (BooleanTerm LogiLang.True) (BooleanTerm LogiLang.False))))
+
+wrongTest3 = TestCase (assertEqual ""
+                        Wrong
+                        (reduce (Pred (BooleanTerm LogiLang.True))))
+
+wrongTest4 = TestCase (assertEqual ""
+                        Wrong
+                        (reduce (Pred (BooleanTerm LogiLang.False))))
+
+wrongTest5 = TestCase (assertEqual ""
+                        Wrong
+                        (reduce (IsZero (BooleanTerm LogiLang.True))))
+
+wrongTests = TestList [TestLabel "if zero true false" wrongTest1,
+                       TestLabel "if (succ zero) true false" wrongTest2,
+                       TestLabel "pred true" wrongTest3,
+                       TestLabel "pred false" wrongTest4,
+                       TestLabel "iszero true" wrongTest5]
+
+
+tests = TestList [valueTests, reductionTests, fullyReduceTests, isZeroTests, predTests, succTests, wrongTests]
